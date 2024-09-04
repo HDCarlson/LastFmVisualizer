@@ -1,29 +1,48 @@
 import requests
 import json
 
-def load_config(filename='config.json'):
-    with open(filename, 'r') as f:
-        return json.load(f)
+def TopTracks(API_KEY, Username, period):
+    #Construct the URL
+    url = f"https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={Username}&api_key={API_KEY}&format=json&period={period}"
+    # Make the request
+    response = requests.get(url)
 
-config = load_config()
-API_KEY = config.get('API_KEY')
-Username = config.get('Username')
-period = '1month'
+    data = response.json()
 
+    tracks = data.get('toptracks', {}).get('track', [])
 
-# Construct the URL
-url = f"https://ws.audioscrobbler.com/2.0/?method=user.gettoptracks&user={Username}&api_key={API_KEY}&format=json&period={period}"
+    #print(data)
 
-# Make the request
-response = requests.get(url)
+    for track in tracks:
+        name = track.get('name')
+        artist = track.get('artist', {}).get('name')
+        rank = track.get('rank')
+        playcount = track.get('playcount')
+        print(f"Name: {name}, artist: {artist}")
 
-data = response.json()
+def TopArtists(API_KEY, Username, period):
+    url = f"https://ws.audioscrobbler.com//2.0/?method=user.gettopartists&user={Username}&api_key={API_KEY}&period={period}&format=json"
+    response = requests.get(url)
+    data = response.json()
+    artists = data.get('topartists', {}).get('artist', [])
 
-tracks = data.get('toptracks', {}).get('track', [])
+    for artist in artists:
+        name = artist.get('name')
+        playcount = artist.get('playcount')
+        print(f"artist: {name} - playcount: {playcount}")
 
-for track in tracks:
-    name = track.get('name')
-    artist = track.get('artist', {}).get('name')
-    rank = track.get('rank')
-    playcount = track.get('playcount')
-    print(f"Name: {name}, artist: {artist}")
+def RecentTracks(API_KEY, Username, start, end):
+        url = f"https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={Username}&api_key={API_KEY}&from={start}&to={end}&format=json"
+        response = requests.get(url)
+        data = response.json()
+        PageNum = data.get('recenttracks', {}).get('@attr', {}).get('totalPages')
+        PageNum = int(PageNum)
+        for Page in range(PageNum):
+            url = f"https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user={Username}&api_key={API_KEY}&from={start}&to={end}&page={Page}&format=json"
+            response = requests.get(url)
+            data = response.json()
+            RecentTracks = data.get('recenttracks', {}).get('track', [])
+            for track in RecentTracks:
+                name = track.get('name')
+                artist = track.get('artist').get('#text')
+                print(f"name: {name} - artist: {artist}")
